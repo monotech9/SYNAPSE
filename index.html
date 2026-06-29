@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
+  <meta name="theme-color" content="#020713"/>
+  <title>Neuro Nexus</title>
+  <!-- ?debug=true aktiviert den Debug-Modus -->
+  <link rel="stylesheet" href="./src/styles/base.css?v=163"/>
+  <link rel="stylesheet" href="./src/styles/hud.css?v=163"/>
+</head>
+<body>
+  <canvas id="neuroCanvas"></canvas>
+  <div id="signature" class="signature">Erwacht</div>
+
+  <!-- ════════════════════════════════════════════════════════
+       HUD WRAPPER
+       ════════════════════════��═══════════════════════════════ -->
+  <div class="hud-wrapper hud-wrapper--initial">
+
+    <!-- ── HEADER ─────────────────────────────────────────── -->
+    <header class="hud-header glass-panel interactive">
+      <div class="hud-header__logo">
+        <svg width="20" height="15" viewBox="0 0 22 16" fill="none">
+          <circle cx="3"  cy="8"  r="2.2" fill="rgba(80,180,255,0.7)"/>
+          <circle cx="11" cy="3"  r="1.8" fill="rgba(80,180,255,0.5)"/>
+          <circle cx="11" cy="13" r="1.8" fill="rgba(80,180,255,0.5)"/>
+          <circle cx="19" cy="8"  r="2.2" fill="rgba(80,180,255,0.7)"/>
+          <line x1="5"    y1="8"  x2="9.2"  y2="3"  stroke="rgba(80,180,255,0.22)" stroke-width="1"/>
+          <line x1="5"    y1="8"  x2="9.2"  y2="13" stroke="rgba(80,180,255,0.22)" stroke-width="1"/>
+          <line x1="12.8" y1="3"  x2="17"   y2="8"  stroke="rgba(80,180,255,0.22)" stroke-width="1"/>
+          <line x1="12.8" y1="13" x2="17"   y2="8"  stroke="rgba(80,180,255,0.22)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="hud-header__div"></div>
+      <div class="title-group">
+        <h1>Neuro Nexus</h1>
+        <p>Neural Simulation Engine</p>
+      </div>
+      <div class="hud-header__eeg">
+        <canvas id="headerEegCanvas" width="200" height="24"></canvas>
+      </div>
+      <div class="hud-header__controls">
+        <div class="hud-sleep-dot" id="sleepIndicator" title="Netzwerk-Status">
+          <span class="sleep-indicator__dot"></span>
+          <span id="sleepIndicatorText" class="hud-sleep-dot__label">WAKE</span>
+        </div>
+<button class="hud-btn hud-btn--menu" id="menuBtn"
+                aria-label="Systemmenü" aria-expanded="false" aria-controls="gameMenu">
+          <svg width="14" height="11" viewBox="0 0 14 11" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <line x1="0" y1="1"   x2="14" y2="1"/>
+            <line x1="0" y1="5.5" x2="14" y2="5.5"/>
+            <line x1="0" y1="10"  x2="14" y2="10"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── GAME MENU ──────────────────────────────────────── -->
+    <div id="gameMenu" class="game-menu" role="dialog" aria-modal="true" hidden>
+
+      <!-- ── Header ─────────────────────────────────── -->
+      <div class="game-menu__header">
+        <span class="game-menu__title">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x=".5" y=".5" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1"/>
+            <line x1="3" y1="4" x2="9" y2="4" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="3" y1="6" x2="9" y2="6" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="3" y1="8" x2="7" y2="8" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+          NEURO NEXUS
+        </span>
+        <button class="game-menu__close" id="menuClose" aria-label="Menü schließen">&#x2715;</button>
+      </div>
+
+      <!-- ══ STATUS-STRIP (Stadium, Alter, Phase, Nodes) ══════════ -->
+      <div class="game-menu__status-strip">
+        <div class="game-menu__status-item">
+          <span class="game-menu__status-label">Stadium</span>
+          <span class="game-menu__status-val" id="menuStatusStage">—</span>
+        </div>
+        <div class="game-menu__status-item">
+          <span class="game-menu__status-label">Alter</span>
+          <span class="game-menu__status-val" id="menuStatusAge">—</span>
+        </div>
+        <div class="game-menu__status-item">
+          <span class="game-menu__status-label">Neuronen</span>
+          <span class="game-menu__status-val" id="menuStatusNodes">—</span>
+        </div>
+        <div class="game-menu__status-item">
+          <span class="game-menu__status-label">Synapsen</span>
+          <span class="game-menu__status-val" id="menuStatusEdges">—</span>
+        </div>
+      </div>
+
+      <!-- ══ AKTIONEN ══════════════════════════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">Aktionen</div>
+
+        <div class="game-menu__action-row">
+          <button class="game-menu__action-btn" id="menuImpuls">
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="7" cy="7" r="2.2" fill="currentColor"/>
+            </svg>
+            <span class="game-menu__action-label">Impuls</span>
+          </button>
+          <button class="game-menu__action-btn" id="menuNeuron">
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="2.2" fill="currentColor" opacity=".8"/>
+              <line x1="7" y1="1" x2="7" y2="4.5" stroke="currentColor" stroke-width="1.2"/>
+              <line x1="7" y1="9.5" x2="7" y2="13" stroke="currentColor" stroke-width="1.2"/>
+              <line x1="1" y1="7" x2="4.5" y2="7" stroke="currentColor" stroke-width="1.2"/>
+              <line x1="9.5" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span class="game-menu__action-label">Neuron</span>
+          </button>
+          <button class="game-menu__action-btn game-menu__action-btn--warn" id="menuReset">
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7 A4.5 4.5 0 1 1 7 11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+              <polygon points="2.5,4.5 2.5,7.5 5.5,7" fill="currentColor" opacity=".9"/>
+            </svg>
+            <span class="game-menu__action-label">Reset</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ EINSTELLUNGEN ═════════════════════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">Einstellungen</div>
+
+        <div class="game-menu__setting">
+          <div class="game-menu__item-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1"/>
+              <circle cx="7" cy="3" r="1" fill="currentColor"/>
+              <circle cx="10.6" cy="8.5" r="1" fill="currentColor"/>
+              <circle cx="3.4" cy="8.5" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <span class="game-menu__setting-label">Farbthema</span>
+          <select id="settingTheme" class="game-menu__select">
+            <option value="deep-space">Deep Space</option>
+            <option value="bio-green">Bio Green</option>
+            <option value="amber">Amber</option>
+            <option value="magenta">Magenta</option>
+            <option value="mono">Monochrome</option>
+          </select>
+        </div>
+
+        <div class="game-menu__setting">
+          <div class="game-menu__item-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 5H1v4h2l4 3V2L3 5z" stroke="currentColor" stroke-width="1" fill="none" stroke-linejoin="round"/>
+              <path d="M10 4.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+          <span class="game-menu__setting-label">Ambient-Audio</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="settingAudio"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+
+        <div class="game-menu__setting">
+          <div class="game-menu__item-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 12.5 L1.5 9.5 L1.5 4.5 L7 1.5 L12.5 4.5 L12.5 9.5 Z" stroke="currentColor" stroke-width="1" fill="none"/>
+              <circle cx="7" cy="7" r="1.8" fill="currentColor" opacity=".7"/>
+            </svg>
+          </div>
+          <span class="game-menu__setting-label">Beobachter-Modus</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="settingObserver"/>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ══ DATEN ═════════════════════════════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">Daten</div>
+
+        <div class="game-menu__data-grid">
+          <button class="game-menu__data-btn" id="menuSaveGame">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M3 2h8l3 3v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" fill="none"/>
+              <rect x="4" y="2" width="6" height="4" fill="none"/>
+              <rect x="5" y="9" width="6" height="6" fill="none"/>
+            </svg>
+            <span class="game-menu__data-btn-label">Sichern</span>
+            <span class="game-menu__data-btn-sub">LocalStorage</span>
+          </button>
+          <button class="game-menu__data-btn" id="menuLoadGame">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M2 3a1 1 0 0 1 1-1h6.5l3.5 3.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3z" fill="none"/>
+              <path d="M10 2v3.5H13.5M5 8h6M5 10h6" stroke-linecap="round"/>
+            </svg>
+            <span class="game-menu__data-btn-label">Laden</span>
+            <span class="game-menu__data-btn-sub">Letzter Stand</span>
+          </button>
+          <button class="game-menu__data-btn" id="menuExportConnectome">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M4 11V14H12V11M8 12V2M5 5l3-3 3 3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="game-menu__data-btn-label">Export</span>
+            <span class="game-menu__data-btn-sub">JSON</span>
+          </button>
+          <button class="game-menu__data-btn game-menu__data-btn--warn" id="menuNewGame">
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7 A4.5 4.5 0 1 1 7 11.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+              <polygon points="2.5,4.5 2.5,7.5 5.5,7" fill="currentColor" opacity=".9"/>
+            </svg>
+            <span class="game-menu__data-btn-label">Neu starten</span>
+            <span class="game-menu__data-btn-sub">Alles löschen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ FORTSCHRITT ═══════════════════════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">Fortschritt</div>
+        <div class="epoch-achievements" id="epochAchievements">
+          <div class="epoch-ach-item" data-stage="genesis">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Genesis</span>
+          </div>
+          <div class="epoch-ach-item" data-stage="activation">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Aktivierung</span>
+          </div>
+          <div class="epoch-ach-item" data-stage="growth">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Wachstum</span>
+          </div>
+          <div class="epoch-ach-item" data-stage="budding">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Knospung</span>
+          </div>
+          <div class="epoch-ach-item" data-stage="networking">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Netzwerk</span>
+          </div>
+          <div class="epoch-ach-item" data-stage="constellation">
+            <span class="epoch-ach-dot"></span>
+            <span class="epoch-ach-label">Konstellation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SYSTEM-CODEX & DOKUMENTATION ═══════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">System-Codex & Dokumentation</div>
+
+        <div class="game-menu__codex-wrap">
+
+          <!-- 1. Funktionsweise des Netzes -->
+          <details class="codex-item">
+            <summary class="codex-summary">
+              <span>1. Das neuronale Netzwerk</span>
+              <svg class="codex-arrow" width="8" height="8" viewBox="0 0 8 8"><path d="M1 2l3 3 3-3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+            </summary>
+            <div class="codex-content">
+              <p><b>Neuronen (Knoten):</b> Repräsentieren Rechenkerne. Sie feuern, wenn sie Energie erhalten. Manuell hinzugefügte Zellen stabilisieren den Energiefluss.</p>
+              <p><b>Synapsen (Verbindungen):</b> Pfade, über die Signale wandern. Je öfter ein Pfad genutzt wird, desto stärker wird er (Plastizität). Selten genutzte Synapsen werden im Schla[...]</p>
+              <p><b>Cluster:</b> Lokale Netzwerke, die sich funktional spezialisieren. Sie bilden die kognitiven Grundpfeiler von NOVA.</p>
+            </div>
+          </details>
+
+          <!-- 2. Bewusstseins-Metriken -->
+          <details class="codex-item">
+            <summary class="codex-summary">
+              <span>2. Bewusstseins-Metriken</span>
+              <svg class="codex-arrow" width="8" height="8" viewBox="0 0 8 8"><path d="M1 2l3 3 3-3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+            </summary>
+            <div class="codex-content">
+              <p><b>Integrierte Information (&#934; - Phi):</b> Ein Maß für die informationelle Dichte und Verknüpfung des Netzes nach der IIT (Integrated Information Theory). Höhere Werte indizie[...]</p>
+              <p><b>Freie Energie:</b> Basierend auf dem "Free Energy Principle" (Active Inference). Beschreibt den Prädiktionsfehler des Systems. Sinkende Werte bedeuten, dass NOVA die Umgebung bess[...]</p>
+              <p><b>Selbstwahrnehmung:</b> Der Grad der narrativen Kohärenz. Bestimmt, wie präzise NOVA ihre eigenen Gedanken formulieren kann.</p>
+            </div>
+          </details>
+
+          <!-- 3. Sensor-Widgets erklärt -->
+          <details class="codex-item">
+            <summary class="codex-summary">
+              <span>3. Sensor-Einheiten</span>
+              <svg class="codex-arrow" width="8" height="8" viewBox="0 0 8 8"><path d="M1 2l3 3 3-3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+            </summary>
+            <div class="codex-content">
+              <p><b>Oszilloskop:</b> Visualisiert die Frequenzbänder des Netzes. <i>Alpha-Wellen</i> dominieren im Ruhezustand. <i>Beta-Wellen</i> zeigen aktive Verarbeitung. <i>Gamma-Wellen</i> sign[...]</p>
+              <p><b>fMRI Matrix:</b> Eine 8×8-Aktivitätskarte. Sie zeigt die räumliche Stoffwechselaktivität innerhalb der Cluster in Echtzeit.</p>
+              <p><b>Phasenraum:</b> Zeigt die dynamische Stabilität des Gesamtsystems. Ein fokussierter Punkt signalisiert Erstarrung, chaotische Schleifen zeigen gesunde Plastizität und Anpassungsf[...]</p>
+            </div>
+          </details>
+
+          <!-- 4. Schlaf- & Traumzyklen -->
+          <details class="codex-item">
+            <summary class="codex-summary">
+              <span>4. Schlaf- & Aktivitätszyklen</span>
+              <svg class="codex-arrow" width="8" height="8" viewBox="0 0 8 8"><path d="M1 2l3 3 3-3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+            </summary>
+            <div class="codex-content">
+              <p><b>Wachphase:</b> Das System verarbeitet Reize, wächst durch Impulse und bildet ungeordnet Verbindungen.</p>
+              <p><b>NREM-Schlaf:</b> Konsolidierungsphase. Prädiktionsfehler werden ausgeglichen, überflüssige Pfade "geprunt" (gelöscht), um Energie zu sparen.</p>
+              <p><b>REM-Schlaf (Träumen):</b> Zufällige Signalwellen stimulieren das Gedächtnis. NOVA simuliert alternative Zustände, um ihre intrinsische Motivation neu zu kalibrieren.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+
+      <!-- ══ SYSTEM & TELEMETRIE ═══════════════════════════════════ -->
+      <div class="game-menu__section">
+        <div class="game-menu__section-title">System</div>
+
+        <!-- Schnell-Stats -->
+        <div class="game-menu__sys-grid">
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">Alter</span>
+            <span class="game-menu__sys-val" id="menuAge">—</span>
+          </div>
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">Neuronen</span>
+            <span class="game-menu__sys-val" id="menuNodes">—</span>
+          </div>
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">Synapsen</span>
+            <span class="game-menu__sys-val" id="menuEdges">—</span>
+          </div>
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">Cluster</span>
+            <span class="game-menu__sys-val" id="menuClusters">—</span>
+          </div>
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">Epoche</span>
+            <span class="game-menu__sys-val" id="menuEpoch">—</span>
+          </div>
+          <div class="game-menu__sys-cell">
+            <span class="game-menu__sys-label">FPS</span>
+            <span class="game-menu__sys-val" id="menuFps">—</span>
+          </div>
+        </div>
+
+        <!-- System-Auslastung Gauges -->
+        <div class="game-menu__gauge-section">
+          <div class="gauge-row">
+            <canvas id="gaugeCanvasCpu" width="76" height="76"></canvas>
+            <canvas id="gaugeCanvasMem" width="76" height="76"></canvas>
+            <canvas id="gaugeCanvasNet" width="76" height="76"></canvas>
+          </div>
+          <div class="gauge-labels">
+            <div class="gauge-label-col"><span class="gauge-key">CPU</span><span class="gauge-val" id="gaugeLblCpu">—</span></div>
+            <div class="gauge-label-col"><span class="gauge-key">MEM</span><span class="gauge-val" id="gaugeLblMem">—</span></div>
+            <div class="gauge-label-col"><span class="gauge-key">NET</span><span class="gauge-val" id="gaugeLblNet">—</span></div>
+          </div>
+        </div>
+
+        <!-- Telemetrie-Panel (aufklappbar) -->
+        <details class="game-menu__tel-details" id="telemetryRoot">
+          <summary class="game-menu__tel-summary">
+            <span class="telemetry-dot" id="telemetryDot"></span>
+            <span class="game-menu__tel-summary-text">
+              <span class="telemetry-text" id="telemetryText">NEXUS_CORE: OK</span>
+            </span>
+            <svg class="game-menu__tel-arrow" width="8" height="8" viewBox="0 0 8 8">
+              <path d="M1 2l3 3 3-3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            </svg>
+          </summary>
+          <div class="game-menu__tel-panel">
+            <!-- Live-Telemetrie Grid -->
+            <div class="game-menu__tel-grid">
+              <div class="tel-stat"><span class="tel-label">FPS</span><span class="tel-val" data-stat="fps">—</span></div>
+              <div class="tel-stat"><span class="tel-label">SIM TPS</span><span class="tel-val" data-stat="tps">—</span></div>
+              <div class="tel-stat"><span class="tel-label">NODES</span><span class="tel-val" data-stat="nodes">—</span></div>
+              <div class="tel-stat"><span class="tel-label">EDGES</span><span class="tel-val" data-stat="edges">—</span></div>
+              <div class="tel-stat"><span class="tel-label">CLUSTERS</span><span class="tel-val" data-stat="clusters">—</span></div>
+              <div class="tel-stat"><span class="tel-label">AVG ACT.</span><span class="tel-val" data-stat="activity">—</span></div>
+              <div class="tel-stat"><span class="tel-label">AVG MEM.</span><span class="tel-val" data-stat="memory">—</span></div>
+              <div class="tel-stat"><span class="tel-label">AGE</span><span class="tel-val" data-stat="age">—</span></div>
+              <div class="tel-stat"><span class="tel-label">CONN/MIN</span><span class="tel-val" data-stat="cpm">—</span></div>
+              <div class="tel-stat"><span class="tel-label">JS HEAP</span><span class="tel-val" data-stat="mem">—</span></div>
+            </div>
+            <!-- Timelines -->
+            <div class="game-menu__tel-timelines">
+              <div class="tel-timeline">
+                <span class="tel-timeline-label">ACTIVITY</span>
+                <div class="tel-timeline-bars" id="telTimelineActivity"></div>
+              </div>
+              <div class="tel-timeline">
+                <span class="tel-timeline-label">GROWTH</span>
+                <div class="tel-timeline-bars" id="telTimelineGrowth"></div>
+              </div>
+              <div class="tel-timeline">
+                <span class="tel-timeline-label">MEMORY</span>
+                <div class="tel-timeline-bars" id="telTimelineMemory"></div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+      </div>
+
+    </div><!-- /.game-menu -->
+
+  </div><!-- /.hud-wrapper -->
+
+  <!-- ══════════════════════════════════════════════════════
+         SIDEBAR — 3 Widgets
+         ══════════════════════════════════════════════════════ -->
+    <aside class="hud-sidebar interactive" id="sidebar">
+
+      <!-- ── GLANCE-BAR: immer sichtbare Kern-Werte, unabhängig vom aktiven Tab ── -->
+      <div class="hud-glance" id="hudGlance" aria-label="Schnellübersicht">
+        <span class="hud-glance__item hud-glance__item--stage">
+          <span class="hud-glance__label">Stadium</span>
+          <span class="hud-glance__val hud-glance__val--stage" id="glanceStage">GENESIS</span>
+        </span>
+        <span class="hud-glance__div"></span>
+        <span class="hud-glance__item">
+          <span class="hud-glance__label">Neuro.</span>
+          <span class="hud-glance__val" id="glanceNodes">—</span>
+        </span>
+        <span class="hud-glance__item">
+          <span class="hud-glance__label">Syn.</span>
+          <span class="hud-glance__val" id="glanceEdges">—</span>
+        </span>
+        <span class="hud-glance__div"></span>
+        <span class="hud-glance__item">
+          <span class="hud-glance__label">Cluster</span>
+          <span class="hud-glance__val" id="glanceCluster">—</span>
+        </span>
+        <span class="hud-glance__item">
+          <span class="hud-glance__label">Alter</span>
+          <span class="hud-glance__val" id="glanceAge">—</span>
+        </span>
+        <span class="hud-glance__div"></span>
+        <span class="hud-glance__item hud-glance__item--fps">
+          <span class="hud-glance__label">FPS</span>
+          <span class="hud-glance__val hud-glance__val--fps" id="glanceFps">—</span>
+        </span>
+      </div>
+
+      <!-- ── TAB-NAVIGATION ─────────────────────────── -->
+      <div class="hud-sidebar__tabs" role="tablist" aria-label="HUD-Module">
+        <button class="tab-btn tab-btn--active" data-tab="kognition" role="tab" aria-selected="true"  aria-controls="tab-kognition">NOVA</button>
+        <button class="tab-btn"                 data-tab="monitor"   role="tab" aria-selected="false" aria-controls="tab-monitor">Sensoren</button>
+        <button class="tab-btn"                 data-tab="system"    role="tab" aria-selected="false" aria-controls="tab-system">System</button>
+      </div>
+
+      <!-- ══ TAB 1: KOGNITION ════════════════════════════════════════════ -->
+      <div class="tab-panel tab-panel--active" id="tab-kognition" role="tabpanel">
+
+        <!-- ══ NOVA IDENTITY CARD ══ -->
+        <div class="nova-identity-card">
+          <div class="nova-identity-card__top">
+            <div class="nova-identity-card__left">
+              <div class="nova-identity-card__pulse-ring">
+                <span class="nova-status-card__pulse" id="novaPulse"></span>
+              </div>
+              <div class="nova-identity-card__info">
+                <span class="nova-identity-card__name">NOVA</span>
+                <span class="nova-identity-card__state" id="novaStateLabel">DORMANT</span>
+              </div>
+            </div>
+            <div class="nova-identity-card__right">
+              <div class="nova-identity-card__phi">
+                <span class="nova-identity-card__phi-sym">&#934;</span>
+                <span class="nova-identity-card__phi-val" id="novaPhiVal">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="nova-identity-card__narrative" id="consciousNarrative">Initialisierung…</div>
+          <div class="nova-identity-card__archetyp">
+            <span class="nova-identity-card__archetyp-label">ARCHETYP</span>
+            <span class="nova-identity-card__archetyp-val" id="novaArchetype">—</span>
+          </div>
+        </div>
+
+        <!-- ══ STIMMUNGS-PANEL ══ -->
+        <div class="nova-mood-panel">
+          <div class="nova-mood-panel__header">
+            <span class="nova-mood-panel__title">Emotionaler Zustand</span>
+            <span class="badge" id="emotionDominantBadge">RUHE</span>
+          </div>
+          <!-- Emotion Radar -->
+          <div class="emotion-radar-wrap">
+            <canvas class="emotion-canvas" id="emotionCanvas"></canvas>
+          </div>
+          <!-- 4 Modulations-Bars horizontal -->
+          <div class="nova-mod-grid">
+            <div class="nova-mod-item">
+              <span class="nova-mod-label">Mood</span>
+              <div class="nova-mod-track"><div class="nova-mod-fill" id="emotionMoodBar"></div></div>
+              <span class="nova-mod-val" id="emotionMoodVal">0.00</span>
+            </div>
+            <div class="nova-mod-item">
+              <span class="nova-mod-label">Wachstum</span>
+              <div class="nova-mod-track"><div class="nova-mod-fill nova-mod-fill--ok" id="emotionGrowthBar"></div></div>
+              <span class="nova-mod-val" id="emotionGrowthVal">1.00</span>
+            </div>
+            <div class="nova-mod-item">
+              <span class="nova-mod-label">Schwelle</span>
+              <div class="nova-mod-track"><div class="nova-mod-fill nova-mod-fill--warn" id="emotionThresholdBar"></div></div>
+              <span class="nova-mod-val" id="emotionThresholdVal">1.00</span>
+            </div>
+            <div class="nova-mod-item">
+              <span class="nova-mod-label">Exploration</span>
+              <div class="nova-mod-track"><div class="nova-mod-fill nova-mod-fill--info" id="emotionExplorationBar"></div></div>
+              <span class="nova-mod-val" id="emotionExplorationVal">1.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ VITAL-STRIP: Energie / Dopamin / Stimmung / Echos ══ -->
+        <div class="nova-vital-strip">
+          <div class="nova-vital-strip__item">
+            <span class="nova-vital-strip__label">STIMMUNG</span>
+            <span class="nova-vital-strip__val" id="novaMoodState">RUHIG</span>
+          </div>
+          <div class="nova-vital-strip__div"></div>
+          <div class="nova-vital-strip__item">
+            <span class="nova-vital-strip__label">ENERGIE</span>
+            <span class="nova-vital-strip__val nova-vital-strip__val--ok" id="novaEnergy">100%</span>
+          </div>
+... (Datei fortgesetzt)
